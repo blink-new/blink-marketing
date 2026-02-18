@@ -94,28 +94,36 @@ The skills in `.opencode/skills/` are automatically discovered. You'll see them 
 
 ## Using the skills
 
-Just describe what you want in plain English. OpenCode will load the right skill automatically.
+Mention the skill by name in your prompt and OpenCode will load it. You can also just describe what you want and it will pick the right one automatically.
 
-**Examples:**
-
-```
-Write a content brief for a TikTok campaign targeting freelancers who want to build portfolio sites
-```
+**Write a content brief:**
 
 ```
-Review this influencer brief and score it
+Use the content-briefs skill to write a TikTok campaign brief targeting freelancers who want to build portfolio sites
 ```
 
-```
-Write a short-form video script for a YouTube Shorts creator, 45 seconds, website builder angle
-```
+**Review an existing brief:**
 
 ```
-Write 5 launch post options for the new mobile app feature
+Use the brief-review skill to score and give feedback on this brief: [paste brief]
 ```
 
+**Write a video script:**
+
 ```
-Suggest 10 demo app ideas for a creator with an audience of solopreneurs
+Use the short-form-video-scripts skill to write a 45-second YouTube Shorts script, website builder angle, casual tone
 ```
 
-The skills will guide OpenCode to follow Blink's brand voice, messaging rules, and content standards automatically.
+**Write social launch posts:**
+
+```
+Use the social-launch-posts skill to write 5 post options for the new mobile app feature launch
+```
+
+**Get demo app ideas:**
+
+```
+Use the blink-app-ideas skill to suggest 10 demo app ideas for a creator whose audience is solopreneurs
+```
+
+All skills reference `blink-brand-context` automatically — brand voice, product facts, and messaging rules are always applied.
