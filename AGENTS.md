@@ -19,7 +19,8 @@ launch-videos/
     ├── open-claw/             # Raw research: RESEARCH.md, frustrations, market, security, history
     ├── openclaw/              # Agent templates research (12 role templates)
     ├── landing-page/          # /claw marketing page source + design reference README
-    └── agent-chat-page/       # /claw/[id] full UI source + design reference README
+    ├── agent-chat-page/       # /claw/[id] full UI source + design reference README
+    └── assets/                # All image assets: agent avatars, provider logos, connector icons
 
 reddit/                        # Reddit marketing content
 ai-ugc/                        # AI-generated UGC content
@@ -34,6 +35,7 @@ export/                        # General exports
 - **Raw OpenClaw research + pain points** → `launch-videos/blink-claw/open-claw/`
 - **Landing page frontend code + design system** → `launch-videos/blink-claw/landing-page/README.md`
 - **Agent chat page frontend code + all components** → `launch-videos/blink-claw/agent-chat-page/README.md`
+- **All image assets (avatars, logos, icons)** → `launch-videos/blink-claw/assets/README.md`
 
 ## Important
 
