@@ -13,13 +13,27 @@ Marketing and growth team workspace for Blink.new. Uses Cursor AI with skills in
 ├── short-form-video-scripts/  # TikTok/Reels/Shorts scripts
 └── social-launch-posts/       # Social posts for launches
 
-launch-videos/                 # Launch video assets and scripts
+launch-videos/
+└── blink-claw/                # Blink Claw launch materials
+    ├── PRD.md                 # Public-facing product overview (no trade secrets)
+    ├── open-claw/             # Raw research: RESEARCH.md, frustrations, market, security, history
+    ├── openclaw/              # Agent templates research (12 role templates)
+    ├── landing-page/          # /claw marketing page source + design reference README
+    └── agent-chat-page/       # /claw/[id] full UI source + design reference README
+
 reddit/                        # Reddit marketing content
 ai-ugc/                        # AI-generated UGC content
 influencer-marketing/          # Influencer campaign materials
 content-briefs/                # Exported content briefs
 export/                        # General exports
 ```
+
+## Key References
+
+- **Blink Claw product overview** → `launch-videos/blink-claw/PRD.md`
+- **Raw OpenClaw research + pain points** → `launch-videos/blink-claw/open-claw/`
+- **Landing page frontend code + design system** → `launch-videos/blink-claw/landing-page/README.md`
+- **Agent chat page frontend code + all components** → `launch-videos/blink-claw/agent-chat-page/README.md`
 
 ## Important
 

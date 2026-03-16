@@ -15,13 +15,44 @@ This repo contains AI agent skills for the Blink marketing team. Skills teach Cu
 ├── short-form-video-scripts/  # Write and review TikTok/Reels/Shorts scripts
 └── social-launch-posts/       # Write social posts for launches
 
-launch-videos/                 # Launch video assets and scripts
+launch-videos/
+└── blink-claw/                                   # Blink Claw launch materials
+    ├── PRD.md                                    # Public product overview (no trade secrets)
+    ├── open-claw/RESEARCH.md                     # OpenClaw deep research
+    ├── open-claw/frustrations.md                 # User pain points + what they actually want
+    ├── open-claw/market-landscape.md             # Competitive landscape
+    ├── open-claw/security.md                     # Security issues (CVEs, exploits)
+    ├── open-claw/history.md                      # Name changes + growth story
+    ├── open-claw/why-viral.md                    # Why it went viral
+    ├── openclaw/agent-templates-12.md            # 12 human-role agent templates
+    ├── landing-page/README.md                    ← START HERE for landing page design
+    ├── landing-page/components/ClawLandingContent.tsx  # Full /claw marketing page (~1,500 lines)
+    └── agent-chat-page/README.md                 ← START HERE for app UI design
+        agent-chat-page/components/               # All 8 panel components
+
 reddit/                        # Reddit marketing content and campaigns
 ai-ugc/                        # AI-generated UGC content
 influencer-marketing/          # Influencer briefs, contracts, campaign materials
 ```
 
 Skills are automatically available in Cursor when you open this folder.
+
+---
+
+## Blink Claw Launch Resources
+
+All materials for the Blink Claw launch are in `launch-videos/blink-claw/`.
+
+### For video scripts and briefs
+- Read `PRD.md` for the product story, user flows, and competitive positioning
+- Read `open-claw/frustrations.md` for the pain points your script should address
+- Read `open-claw/why-viral.md` for the emotional hooks that made OpenClaw blow up
+
+### For recreating the UI in video / AI coding
+- **Landing page** (`/claw`) → [`landing-page/README.md`](launch-videos/blink-claw/landing-page/README.md)
+  - Full design system, 4 animated demo breakdowns, section structure, copy
+- **Agent chat page** (`/claw/[id]`) → [`agent-chat-page/README.md`](launch-videos/blink-claw/agent-chat-page/README.md)
+  - All 8 components documented with exact CSS classes, layout specs, color tokens
 
 ---
 
