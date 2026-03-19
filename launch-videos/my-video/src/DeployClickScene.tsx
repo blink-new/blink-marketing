@@ -58,13 +58,15 @@ const TextSlide: React.FC = () => {
   });
   const inX = interpolate(inSpring, [0, 1], [700, 0]);
 
-  const outX = interpolate(frame, [24, 54], [0, -700], {
+  const HOLD_END = 64;   // hold text centered for ~0.8s before exit
+  const EXIT_END = 84;
+  const outX = interpolate(frame, [HOLD_END, EXIT_END], [0, -700], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.in(Easing.cubic),
   });
 
-  const translateX = frame < 24 ? inX : outX;
+  const translateX = frame < 16 ? inX : frame < HOLD_END ? 0 : outX;
 
   return (
     <AbsoluteFill
@@ -105,8 +107,8 @@ const DeployButton: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const LOCAL_CLICK = 94;
-  const LOCAL_EXIT = 96;
+  const LOCAL_CLICK = 64;
+  const LOCAL_EXIT = 66;
 
   // Slide in from right: spring translateX 900 → 0
   const slideSpring = spring({
@@ -246,7 +248,7 @@ const ClickRipple: React.FC = () => {
 const CursorScene: React.FC = () => {
   const frame = useCurrentFrame();
 
-  const LOCAL_ARRIVE = 94;
+  const LOCAL_ARRIVE = 64;
 
   // Glide (interpolate, inOut easing)
   const cx = interpolate(
@@ -279,7 +281,7 @@ const CursorScene: React.FC = () => {
   );
 
   // Fade out after button exits
-  const alpha = interpolate(frame, [104, 118], [1, 0], {
+  const alpha = interpolate(frame, [72, 80], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -358,16 +360,16 @@ const AgentCardScene: React.FC = () => {
   // ── Task label text-reveal: grows maxWidth from 0 → full text width ─────────
   // Simulates typing; each char ~9.5px in 13px monospace
   const CW = 9.5;
-  const t1MaxW = interpolate(frame, [100, 136], [0, 34 * CW], {
+  const t1MaxW = interpolate(frame, [70, 94], [0, 34 * CW], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
-  const t2MaxW = interpolate(frame, [140, 180], [0, 45 * CW], {
+  const t2MaxW = interpolate(frame, [98, 125], [0, 45 * CW], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
 
   // ── Checkmarks ──────────────────────────────────────────────────────────────
-  const t1Check = interpolate(frame, [136, 148], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const t2Check = interpolate(frame, [180, 192], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const t1Check = interpolate(frame, [94, 103], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const t2Check = interpolate(frame, [125, 133], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   // ── Palette ─────────────────────────────────────────────────────────────────
   const GC = "#22c55e";
@@ -560,28 +562,28 @@ const AgentCardScene: React.FC = () => {
 export const DeployClickScene: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: C.bg, overflow: "hidden" }}>
-      {/* Text: global 0-55 — snappy in (0-24) and sharp exit (24-54) */}
-      <Sequence from={0} durationInFrames={56}>
+      {/* Text: global 0-83 — snappy in (0-16), hold (16-64), exit (64-84) */}
+      <Sequence from={0} durationInFrames={84}>
         <TextSlide />
       </Sequence>
 
-      {/* Button: global 56-181 — appears only after text has fully cleared */}
-      <Sequence from={56} durationInFrames={126} premountFor={5}>
+      {/* Button: global 84-172 — appears only after text has fully cleared */}
+      <Sequence from={84} durationInFrames={88} premountFor={5}>
         <DeployButton />
       </Sequence>
 
-      {/* Ripple: global 150-209 */}
-      <Sequence from={150} durationInFrames={60}>
+      {/* Ripple: global 146-188 — click lands at global 84+64=148 */}
+      <Sequence from={146} durationInFrames={42}>
         <ClickRipple />
       </Sequence>
 
-      {/* Cursor: global 56-181 */}
-      <Sequence from={56} durationInFrames={126}>
+      {/* Cursor: global 84-172 */}
+      <Sequence from={84} durationInFrames={88}>
         <CursorScene />
       </Sequence>
 
-      {/* Agent card: global 160-359 — full reference UI with staggered reveals */}
-      <Sequence from={160} durationInFrames={200} premountFor={5}>
+      {/* Agent card: global 172-397 — full reference UI, then ~3.5s hold at end */}
+      <Sequence from={172} durationInFrames={225} premountFor={5}>
         <AgentCardScene />
       </Sequence>
     </AbsoluteFill>

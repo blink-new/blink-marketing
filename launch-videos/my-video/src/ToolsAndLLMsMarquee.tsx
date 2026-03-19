@@ -200,7 +200,7 @@ export const ToolsAndLLMsMarquee: React.FC = () => {
                 color: "transparent",
               }}
             >
-              20+ LLMs
+              200+ LLMs
             </span>
           </div>
           <div

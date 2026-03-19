@@ -9,13 +9,15 @@ import {
 } from "remotion";
 import { brand } from "./brand";
 
-const SCENE_DURATION_SECONDS = 0.75;
+const SCENE_DURATION_SECONDS = 1.5;
 const FPS = 60;
 
+// Animation fills the full 1.5 s (90 frames):
+// "Introducing" starts at 0, "Blink" at 15, "Claw" at 30, each animates over 45 frames
 const INTRO_START = 0;
-const BLINK_START = 6;
-const CLAW_START = 14;
-const WORD_ANIM_DURATION = 20;
+const BLINK_START = 15;
+const CLAW_START = 30;
+const WORD_ANIM_DURATION = 45;
 
 const getWordStyle = (frame: number, start: number): React.CSSProperties => {
   const end = start + WORD_ANIM_DURATION;
@@ -51,7 +53,7 @@ export const BlinkClawIntro: React.FC = () => {
 
   const ellipseTranslateY = interpolate(
     frame,
-    [0, 18],
+    [0, 45],
     [height * 0.5, 0],
     {
       easing: Easing.out(Easing.cubic),

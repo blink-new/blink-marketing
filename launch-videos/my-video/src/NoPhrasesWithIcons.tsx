@@ -1,10 +1,8 @@
 import {
   AbsoluteFill,
-  Video,
   interpolate,
   useCurrentFrame,
   useVideoConfig,
-  staticFile,
 } from "remotion";
 import { brand } from "./brand";
 
@@ -15,12 +13,12 @@ const PHRASES = [
   { prefix: "No", highlight: "Security Concerns" },
 ] as const;
 
-const PHRASE_DURATION = 72; // 12 in + 48 hold + 12 out at 60fps (~1.2s each)
-const SLIDE_IN_END = 12;
-const SLIDE_OUT_START = 60;
-const PULSE_START = 14;
-const PULSE_PEAK = 22;
-const PULSE_END = 30;
+const PHRASE_DURATION = 45; // 4 phrases × 45 = 180 frames = 3s at 60fps
+const SLIDE_IN_END = 7;
+const SLIDE_OUT_START = 37;
+const PULSE_START = 9;
+const PULSE_PEAK = 14;
+const PULSE_END = 19;
 
 const FONT_SIZE = 115;
 export const NoPhrasesWithIcons: React.FC = () => {
@@ -51,43 +49,52 @@ export const NoPhrasesWithIcons: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
+        background: "#FFFFFF",
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <Video
-        src={staticFile("animated.mp4")}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-        muted
-        loop
-      />
       <div
         style={{
           display: "flex",
           flexDirection: "row",
-          alignItems: "center",
-          gap: 32,
+          alignItems: "baseline",
+          gap: 24,
           transform: `translateX(${translateX}px) scale(${scale})`,
+          whiteSpace: "nowrap",
         }}
       >
+        {/* "No" in solid black */}
         <span
           style={{
             fontFamily: brand.fonts.heading,
             fontWeight: brand.fontWeight.semibold,
             fontSize: FONT_SIZE,
-            color: "#FFFFFF",
-            whiteSpace: "nowrap",
+            color: "#111111",
             letterSpacing: "-0.06em",
           }}
         >
-          <span>{prefix} </span>
-          <span>{highlight}</span>
+          {prefix}
+        </span>
+
+        {/* Highlighted phrase in gradient */}
+        <span
+          style={{
+            fontFamily: brand.fonts.heading,
+            fontWeight: brand.fontWeight.semibold,
+            fontSize: FONT_SIZE,
+            letterSpacing: "-0.06em",
+            background: "linear-gradient(90deg, #0006BA, #A599FF)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            color: "transparent",
+            display: "inline-block",
+            paddingRight: "0.06em",
+            paddingBottom: "0.08em",
+          }}
+        >
+          {highlight}
         </span>
       </div>
     </AbsoluteFill>

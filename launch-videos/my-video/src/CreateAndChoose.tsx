@@ -13,13 +13,13 @@ import { brand } from "./brand";
 
 const ff = brand.fonts.heading;
 
-// ─── Gallery card constants (mirrors TemplateGallery) ─────────────────────────
-const CARD_W   = 272;
-const CARD_H   = 206;
-const CARD_GAP = 18;
-const ROW_GAP  = 22;
-const SET_SIZE = 6;
-const SET_W    = SET_SIZE * (CARD_W + CARD_GAP); // 1740px
+// ─── Gallery card constants (CreateAndChoose: fewer, bigger cards) ───────────
+const CARD_W   = 380;
+const CARD_H   = 280;
+const CARD_GAP = 24;
+const ROW_GAP  = 28;
+const SET_SIZE = 4;   // 4 cards per row (was 6)
+const SET_W    = SET_SIZE * (CARD_W + CARD_GAP); // 1616px
 
 // ─── Phase timings (60 fps) ───────────────────────────────────────────────────
 const TYPING_TEXT = "Build me a Personal Assistant that replies to my emails for me";
@@ -27,18 +27,19 @@ const TYPING_TEXT = "Build me a Personal Assistant that replies to my emails for
 const T_HEAD_IN    = 0;
 const T_CHAT_IN    = 28;
 const T_TYPE_START = 58;
-const T_TYPE_END   = T_TYPE_START + 90;  // 148 — ~1.5s
-const T_CUR_IN     = T_TYPE_END + 4;     // 152 — cursor appears
-const T_CUR_ARRIVE = T_CUR_IN + 32;      // 184 — cursor reaches button
-const T_CLICK      = T_CUR_ARRIVE + 2;   // 186 — click
-const P1_FADE_END  = T_CLICK + 26;       // 212 — phase-1 fully gone
+const T_TYPE_DUR   = 150;  // ~2.5s typewriter (was 90)
+const T_TYPE_END   = T_TYPE_START + T_TYPE_DUR;  // 208
+const T_CUR_IN     = T_TYPE_END + 4;     // 212 — cursor appears
+const T_CUR_ARRIVE = T_CUR_IN + 32;      // 244 — cursor reaches button
+const T_CLICK      = T_CUR_ARRIVE + 2;   // 246 — click
+const P1_FADE_END  = T_CLICK + 26;       // 272 — phase-1 fully gone
 
-const T_TRANS_IN   = T_CLICK + 34;       // 220 — transition text pops in
-const T_TRANS_OUT  = T_TRANS_IN + 72;    // 292 — transition text starts exiting
-const T_TRANS_GONE = T_TRANS_OUT + 18;   // 310
+const T_TRANS_IN   = T_CLICK + 34;       // 280 — transition text pops in
+const T_TRANS_OUT  = T_TRANS_IN + 72;    // 352 — transition text starts exiting
+const T_TRANS_GONE = T_TRANS_OUT + 18;   // 370
 
-const T_GAL_IN     = T_TRANS_OUT + 6;    // 298 — gallery fades in
-const TOTAL_FRAMES = T_GAL_IN + 90; // 1.5 s of gallery (90 frames at 60fps)
+const T_GAL_IN     = T_TRANS_OUT + 6;    // 358 — gallery fades in
+export const CREATE_AND_CHOOSE_FRAMES = T_GAL_IN + 122;  // 480 — 8 s total
 
 // ─── Canvas coordinates of the send button (1920×1080) ───────────────────────
 // Chat box: 720px wide, centered at x=960 → left=600
@@ -77,14 +78,14 @@ const AGENTS: Agent[] = [
   { name:"Rex",    role:"Infra & Security",     for:"Engineers · CTOs",              desc:"Monitors uptime, scans error logs, and sends an incident alert the moment things break.",                    metric:"Downtime alert in under 60s",       avatar:"rex.webp",    accentColor:"#dc2626", accentBg:"#fef2f2" },
   { name:"Archer", role:"Investment Researcher",for:"Investors · Traders",           desc:"Sends a pre-market brief every morning and researches any stock or sector on demand.",                       metric:"Market brief at 7 AM daily",        avatar:"archer.webp", accentColor:"#b45309", accentBg:"#fefce8" },
 ];
-const ROW1 = [AGENTS[0], AGENTS[3], AGENTS[6], AGENTS[9],  AGENTS[1], AGENTS[4]];
-const ROW2 = [AGENTS[7], AGENTS[10],AGENTS[2], AGENTS[5],  AGENTS[8], AGENTS[11]];
-const ROW3 = [AGENTS[4], AGENTS[1], AGENTS[8], AGENTS[11], AGENTS[3], AGENTS[6]];
+const ROW1 = [AGENTS[0], AGENTS[1], AGENTS[2], AGENTS[3]];
+const ROW2 = [AGENTS[4], AGENTS[5], AGENTS[6], AGENTS[7]];
+const ROW3 = [AGENTS[8], AGENTS[9], AGENTS[10], AGENTS[11]];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function TrendIcon({ color }: { color: string }) {
   return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
       <polyline points="17 6 23 6 23 12" />
     </svg>
@@ -105,24 +106,24 @@ function OnlineDot({ frame }: { frame: number }) {
 
 function AgentCard({ agent, frame }: { agent: Agent; frame: number }) {
   return (
-    <div style={{ width: CARD_W, height: CARD_H, flexShrink: 0, background: "#ffffff", borderRadius: 16, border: "1.5px solid #E5E7EB", boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)", padding: "16px 18px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 11 }}>
+    <div style={{ width: CARD_W, height: CARD_H, flexShrink: 0, background: "#ffffff", borderRadius: 20, border: "1.5px solid #E5E7EB", boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)", padding: "20px 22px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
-          <div style={{ width: 46, height: 46, borderRadius: "50%", overflow: "hidden", border: `2px solid ${agent.accentColor}33` }}>
+          <div style={{ width: 58, height: 58, borderRadius: "50%", overflow: "hidden", border: `2px solid ${agent.accentColor}33` }}>
             <Img src={staticFile(agent.avatar)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
           </div>
           <div style={{ position: "absolute", bottom: 1, right: 1 }}><OnlineDot frame={frame} /></div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827", fontFamily: ff, letterSpacing: "-0.02em", lineHeight: 1.2 }}>{agent.name}</div>
-          <div style={{ fontSize: 10.5, color: "#6B7280", fontFamily: ff, marginTop: 2, lineHeight: 1.3 }}>{agent.role}</div>
-          <div style={{ fontSize: 9.5, color: "#9CA3AF", fontFamily: ff, marginTop: 1, lineHeight: 1.3 }}>{agent.for}</div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: "#111827", fontFamily: ff, letterSpacing: "-0.02em", lineHeight: 1.2 }}>{agent.name}</div>
+          <div style={{ fontSize: 18, color: "#6B7280", fontFamily: ff, marginTop: 3, lineHeight: 1.3 }}>{agent.role}</div>
+          <div style={{ fontSize: 16, color: "#9CA3AF", fontFamily: ff, marginTop: 2, lineHeight: 1.3 }}>{agent.for}</div>
         </div>
       </div>
-      <div style={{ fontSize: 11, color: "#4B5563", fontFamily: ff, lineHeight: 1.5, flex: 1, overflow: "hidden" }}>{agent.desc}</div>
-      <div style={{ marginTop: 11, display: "inline-flex", alignItems: "center", gap: 5, background: agent.accentBg, border: `1px solid ${agent.accentColor}33`, borderRadius: 20, padding: "4px 10px", alignSelf: "flex-start" }}>
+      <div style={{ fontSize: 18, color: "#4B5563", fontFamily: ff, lineHeight: 1.5, flex: 1, overflow: "hidden" }}>{agent.desc}</div>
+      <div style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 6, background: agent.accentBg, border: `1px solid ${agent.accentColor}33`, borderRadius: 20, padding: "6px 12px", alignSelf: "flex-start" }}>
         <TrendIcon color={agent.accentColor} />
-        <span style={{ fontSize: 10, fontWeight: 600, color: agent.accentColor, fontFamily: ff, whiteSpace: "nowrap" }}>{agent.metric}</span>
+        <span style={{ fontSize: 17, fontWeight: 600, color: agent.accentColor, fontFamily: ff, whiteSpace: "nowrap" }}>{agent.metric}</span>
       </div>
     </div>
   );
@@ -251,7 +252,7 @@ export const CreateAndChoose: React.FC = () => {
   const chatRotX = interpolate(chatSpring, [0, 1], [22, 0]);
   // When camera zooms in: chatbox rocks right (+) then left (−) then settles
   const fSinceZoom = Math.max(0, frame - T_TYPE_START);
-  const chatRotY   = interpolate(fSinceZoom, [0, 38, 86, 130, 175], [0, 5, -3, 1, 0], {
+  const chatRotY   = interpolate(fSinceZoom, [0, 63, 143, 217, 292], [0, 5, -3, 1, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
     easing: Easing.inOut(Easing.quad),
   });
@@ -260,7 +261,7 @@ export const CreateAndChoose: React.FC = () => {
   });
 
   // ── Typewriter ──────────────────────────────────────────────────────────────
-  const typeProgress = Math.min(1, Math.max(0, (frame - T_TYPE_START) / 90));
+  const typeProgress = Math.min(1, Math.max(0, (frame - T_TYPE_START) / T_TYPE_DUR));
   const typedChars   = Math.floor(typeProgress * TYPING_TEXT.length);
   const typedText    = TYPING_TEXT.slice(0, typedChars);
 
@@ -406,9 +407,9 @@ export const CreateAndChoose: React.FC = () => {
         WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
         overflow: "hidden",
       }}>
-        <ScrollRow agents={ROW1} gFrame={gFrame} speed={12} dir={-1} />
-        <ScrollRow agents={ROW2} gFrame={gFrame} speed={9}  dir={1}  />
-        <ScrollRow agents={ROW3} gFrame={gFrame} speed={7}  dir={-1} />
+        <ScrollRow agents={ROW1} gFrame={gFrame} speed={4}  dir={-1} />
+        <ScrollRow agents={ROW2} gFrame={gFrame} speed={3}  dir={1}  />
+        <ScrollRow agents={ROW3} gFrame={gFrame} speed={2.5} dir={-1} />
       </AbsoluteFill>
 
     </AbsoluteFill>
