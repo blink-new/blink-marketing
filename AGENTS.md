@@ -10,6 +10,7 @@ Marketing and growth team workspace for Blink.new. Uses Cursor AI with skills in
 ├── blink-app-ideas/           # Demo app suggestions for creators
 ├── brief-review/              # Evaluate and improve influencer briefs
 ├── content-briefs/            # Write creator/influencer campaign briefs
+├── remotion-compositions/     # Create Remotion video scenes/compositions
 ├── short-form-video-scripts/  # TikTok/Reels/Shorts scripts
 └── social-launch-posts/       # Social posts for launches
 
