@@ -9,11 +9,11 @@ description: Create or modify Remotion video compositions for Blink marketing vi
 
 | Path | Purpose |
 |------|---------|
-| `launch-videos/my-video/` | Remotion project root |
-| `launch-videos/my-video/src/` | All compositions, components, and utilities |
-| `launch-videos/my-video/public/` | Static assets (images, videos, audio) |
-| `launch-videos/my-video/src/Root.tsx` | Composition registration — every composition must be registered here |
-| `launch-videos/my-video/src/brand.ts` | Brand tokens (colors, fonts, spacing) — always use this |
+| `launch-videos/<project>/` | Remotion project root |
+| `launch-videos/<project>/src/` | All compositions, components, and utilities |
+| `launch-videos/<project>/public/` | Static assets (images, videos, audio) |
+| `launch-videos/<project>/src/Root.tsx` | Composition registration — every composition must be registered here |
+| `launch-videos/<project>/src/brand.ts` | Brand tokens (colors, fonts, spacing) — always use this |
 
 **Dependencies:** Remotion 4.x, `@remotion/google-fonts`, `@remotion/tailwind-v4`, `lucide-react`.
 
@@ -41,20 +41,15 @@ import { brand } from "./brand";
 | `brand.colors.background` | `#000000` |
 | `brand.colors.text` | `#FFFFFF` |
 | `brand.fonts.heading` / `brand.fonts.body` | DM Sans (loaded via `@remotion/google-fonts/DMSans`) |
-| `brand.fontWeight.regular` | `"400"` |
-| `brand.fontWeight.semibold` | `"600"` |
 | `brand.fontWeight.bold` | `"700"` |
 | `brand.fontSize.title` | 72 |
 | `brand.fontSize.subtitle` | 36 |
 | `brand.fontSize.body` | 24 |
-| `brand.fontSize.small` | 18 |
 | `brand.paddingHorizontal` | 0.1 (10% each side) |
 
 ---
 
 ## 4. Blink Gradient (Accent Text)
-
-Use for highlight words ("Blink", "Claw", feature names):
 
 ```tsx
 background: "linear-gradient(90deg, #0006BA, #A599FF)",
@@ -62,12 +57,6 @@ WebkitBackgroundClip: "text",
 backgroundClip: "text",
 WebkitTextFillColor: "transparent",
 color: "transparent",
-```
-
-Vertical variant when needed:
-
-```tsx
-background: "linear-gradient(180deg, #0006BA, #A599FF)",
 ```
 
 ---
@@ -79,8 +68,10 @@ import {
   AbsoluteFill,
   Audio,
   Easing,
+  Freeze,
   Img,
   interpolate,
+  OffthreadVideo,
   Sequence,
   Series,
   spring,
@@ -95,101 +86,63 @@ import {
 
 ## 6. Static Assets
 
-All assets live in `launch-videos/my-video/public/`. Reference via `staticFile()`:
+Reference via `staticFile()`:
 
 ```tsx
-<Img src={staticFile("Introducing Blink Claw - BG.png")} ... />
-<Video src={staticFile("Agent Demo 1.mp4")} ... />
-<Audio src={staticFile("feinsmecker - Stop Hidin - Instrumental version.mp3")} ... />
+<Img src={staticFile("logo.png")} ... />
+<Video src={staticFile("demo.mp4")} ... />
+<Audio src={staticFile("music.mp3")} ... />
 ```
-
-**Available assets (examples):**  
-Images: `Introducing Blink Claw - BG.png`, `Ellipse 1.png`, `Slack.png`, `OpenAI.png`, etc.  
-Videos: `Agent Demo 1.mp4`, `Agent Demo 2 New.mp4`, `Agent Demo 3 New.mp4`, `Jamie Slack Video New.mp4`, `Notion.mp4`  
-Avatars: `jamie.webp`, `alex.webp`, `maya.webp`, etc.
 
 ---
 
 ## 7. Core Remotion Hooks & APIs
 
 ### `useCurrentFrame()`
-Returns current frame (0-based). Use for time-based animation.
-
-```tsx
-const frame = useCurrentFrame();
-```
+Returns current frame (0-based).
 
 ### `useVideoConfig()`
 Returns `{ fps, width, height, durationInFrames }`.
 
-```tsx
-const { fps, width, height } = useVideoConfig();
-```
-
 ### `interpolate(frame, inputRange, outputRange, options?)`
-Maps frame to a value. Always prefer over manual math.
+Always use `extrapolateLeft/Right: "clamp"` to prevent overshoot:
 
 ```tsx
 const opacity = interpolate(frame, [0, 20], [0, 1], {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
+  easing: Easing.out(Easing.cubic),
 });
 ```
 
-### `Easing`
-Use for non-linear timing:
-
-```tsx
-easing: Easing.out(Easing.cubic),
-easing: Easing.in(Easing.cubic),
-easing: Easing.inOut(Easing.cubic),
-```
-
 ### `spring({ fps, frame, config?, durationInFrames?, to? })`
-Bouncy or smooth spring animation:
 
 ```tsx
 const s = spring({
   fps,
-  frame,
-  config: { stiffness: 200, damping: 26, mass: 1 },
-  durationInFrames: 15,
+  frame: Math.max(0, localFrame), // clamp to avoid negative frames
+  config: { stiffness: 700, damping: 32, mass: 0.8 },
+  durationInFrames: 14,
   to: 1,
 });
-const x = interpolate(s, [0, 1], [100, 0]);
 ```
 
 ---
 
 ## 8. Sequencing & Composition
 
-### `Sequence`
-Render a child only for a range of frames:
-
+### `Sequence` — render child for a frame range
 ```tsx
 <Sequence from={100} durationInFrames={200}>
   <MyScene />
 </Sequence>
 ```
 
-Use `layout="none"` to avoid layout shift when overlaying:
-
-```tsx
-<Sequence from={C4_TAB} layout="none">
-  <NotionSlide />
-</Sequence>
-```
-
-### `Series`
-Play children sequentially (like slides). Each `Series.Sequence` has a fixed duration:
-
+### `Series` — play children sequentially
 ```tsx
 <Series>
   <Series.Sequence durationInFrames={90} name="Intro">
     <BlinkClawIntro />
-  </Series.Sequence>
-  <Series.Sequence durationInFrames={120} name="Scene2">
-    <Scene2 />
   </Series.Sequence>
 </Series>
 ```
@@ -198,174 +151,374 @@ Play children sequentially (like slides). Each `Series.Sequence` has a fixed dur
 
 ## 9. Media Components
 
-### `Img`
+### `Video` — for standard playback
 ```tsx
-<Img
-  src={staticFile("logo.png")}
-  style={{
-    width: CARD_SIZE,
-    height: CARD_SIZE,
-    objectFit: "contain",
-  }}
+<Video src={staticFile("demo.mp4")} playbackRate={1.5}
+  style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+```
+
+### `OffthreadVideo` — preferred for background videos
+Use `OffthreadVideo` (not `Video`) when you need frame-accurate rendering or the `time` prop for clamping. It renders off the main thread, producing sharper frames and avoiding flicker.
+
+```tsx
+<OffthreadVideo
+  src={staticFile("bg.mp4")}
+  time={videoTime}  // explicit time in seconds — use this instead of startFrom
+  style={{ width: "100%", height: "100%", objectFit: "cover" }}
 />
 ```
 
-### `Video`
+**Clamping a video to freeze at a specific second:**
 ```tsx
-<Video
-  src={staticFile("demo.mp4")}
-  playbackRate={1.5}
-  style={{
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  }}
-/>
+const videoTime = Math.min(frame / fps, FREEZE_AT_FRAME / fps);
+<OffthreadVideo src={staticFile("bg.mp4")} time={videoTime} ... />
 ```
 
-- Use `objectFit: "cover"` or `objectFit: "fill"` depending on layout.
-- For browser-chrome style cards, use `playbackRate={1.5}` to speed up demos.
-- Video frame count at 1.5x: `Math.round(videoSeconds * 60 / 1.5)`.
+**IMPORTANT:** Always verify the video file's actual duration with `ffprobe` before using `time`/`startFrom` offsets — the video may be shorter than expected.
 
 ### `Audio`
 ```tsx
 <Audio
   src={staticFile("music.mp3")}
-  trimBefore={4.66}
-  volume={(f) =>
-    interpolate(
-      f,
-      [totalFrames - 60, totalFrames],
-      [0.9, 0],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-    )
-  }
+  volume={(f) => interpolate(f, [totalFrames - 60, totalFrames], [0.9, 0], {
+    extrapolateLeft: "clamp", extrapolateRight: "clamp"
+  })}
 />
 ```
 
 ---
 
-## 10. Common Animation Patterns
+## 10. `Freeze` — Static Hold at End of Video
 
-### Linear fade-in
+To freeze the last frame for N seconds (e.g. a 1-second pause):
+
 ```tsx
-const opacity = interpolate(frame, [0, 20], [0, 1], {
-  extrapolateLeft: "clamp",
-  extrapolateRight: "clamp",
-});
+// At top of file
+const FREEZE_AT_FRAME = 212; // last animated frame
+// DURATION = FREEZE_AT_FRAME + 60 (1s hold at 60fps) = 272
+
+export const MyVideo: React.FC = () => {
+  const frame = useCurrentFrame();
+  return (
+    <Freeze frame={Math.min(frame, FREEZE_AT_FRAME)}>
+      <MyLayout />
+    </Freeze>
+  );
+};
 ```
 
-### Slide in from right
+**Critical rules for `Freeze`:**
+- **Always** render `<Freeze>` unconditionally with `Math.min(frame, FREEZE_AT_FRAME)` as the `frame` prop.
+- **Never** conditionally render `<Freeze>` (e.g. `{frame >= X && <Freeze>}`). Conditional rendering causes React to unmount/remount, producing a 1-frame transparent flash at the boundary.
+- `useCurrentFrame()` inside `<Freeze>` correctly reports the frozen frame value — all child animations automatically hold.
+
+---
+
+## 11. Video Color Shifting (CSS Filters)
+
+To shift a video's colour palette (e.g. purple → deep blue):
+
 ```tsx
-const x = interpolate(frame, [0, 20], [700, 0], {
+<OffthreadVideo
+  src={staticFile("bg.mp4")}
+  time={videoTime}
+  style={{
+    width: "100%", height: "100%", objectFit: "cover",
+    filter: "hue-rotate(-65deg) saturate(1.6) brightness(0.6)",
+  }}
+/>
+{/* Force neutral/grey tones into the target hue */}
+<div style={{
+  position: "absolute",
+  inset: 0,
+  background: "#1e3a8a",      // target colour
+  mixBlendMode: "color",
+  opacity: 0.75,
+  pointerEvents: "none",
+}} />
+```
+
+**Filter tuning guide:**
+- `hue-rotate`: degrees to shift on colour wheel. Purple→Blue ≈ `-65deg`. Over-rotating (e.g. `-100deg`) lands in green.
+- `saturate`: boost above 1 for richer colour; reduce for muted.
+- `brightness`: reduce for darker feel.
+- The `mix-blend-mode: color` overlay forces remaining grey/neutral tones into the target hue — essential when the filter alone doesn't fully control neutral areas.
+
+---
+
+## 12. Split-Screen Layout
+
+For side-by-side panels (e.g. 2/5 text + 3/5 content):
+
+```tsx
+const CANVAS_W = 1920;
+const CANVAS_H = 1080;
+const TEXT_W = Math.round((CANVAS_W * 2) / 5); // 768px
+const CONTENT_W = CANVAS_W - TEXT_W;           // 1152px
+
+const Layout: React.FC = () => (
+  <AbsoluteFill style={{ flexDirection: "row" }}>
+    <div style={{ width: TEXT_W, height: CANVAS_H, flexShrink: 0, position: "relative", overflow: "hidden" }}>
+      <LeftPanel />
+    </div>
+    <div style={{ width: CONTENT_W, height: CANVAS_H, position: "relative", overflow: "hidden" }}>
+      <RightPanel />
+    </div>
+  </AbsoluteFill>
+);
+```
+
+---
+
+## 13. Animated Number Counter
+
+```tsx
+const rawCount = interpolate(frame, [COUNTER_START, COUNTER_END], [0, 10000], {
+  extrapolateLeft: "clamp",
+  extrapolateRight: "clamp",
+  easing: Easing.out(Easing.cubic),
+});
+const displayCount = Math.round(rawCount).toLocaleString(); // "7,432"
+```
+
+---
+
+## 14. Word-by-Word Pop Animation
+
+```tsx
+const wordSpring = (localFrame: number) =>
+  spring({
+    fps,
+    frame: Math.max(0, localFrame),
+    config: { stiffness: 700, damping: 32, mass: 0.8 },
+    durationInFrames: 14,
+    to: 1,
+  });
+
+const WORDS = ["Claw", "Agents"];
+const WORD_STAGGER = 22; // frames between each word
+
+{WORDS.map((word, i) => {
+  const pop = wordSpring(frame - DELAY - i * WORD_STAGGER);
+  const y   = interpolate(pop, [0, 1], [36, 0]);
+  const opacity = interpolate(pop, [0, 1], [0, 1]);
+  const scale = interpolate(pop, [0, 1], [0.72, 1]);
+  return (
+    <div key={word} style={{
+      opacity,
+      transform: `translateY(${y}px) scale(${scale})`,
+      transformOrigin: "left bottom",
+    }}>
+      {word}
+    </div>
+  );
+})}
+```
+
+---
+
+## 15. Globe / World Map Composition
+
+Use `react-simple-maps` + `d3-geo` for an animated rotating globe.
+
+**Install (React 19 projects need `--legacy-peer-deps`):**
+```bash
+npm install react-simple-maps d3-geo --legacy-peer-deps
+npm install prop-types --legacy-peer-deps  # peer dep of react-simple-maps
+```
+
+**Download map data:**
+```bash
+curl -o public/countries-110m.json https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json
+```
+
+**Globe SVG layer:**
+```tsx
+import { ComposableMap, Geographies, Geography, Graticule, Sphere } from "react-simple-maps";
+import { geoOrthographic } from "d3-geo";
+
+const GEO_URL = staticFile("countries-110m.json");
+
+// rotateLon drives the spin via interpolate()
+<ComposableMap
+  width={MAP_W} height={CANVAS_H}
+  projection="geoOrthographic"
+  projectionConfig={{ scale: GLOBE_SCALE, rotate: [-rotateLon, -8, 0] }}
+  style={{ width: "100%", height: "100%", position: "absolute", top: 0, left: 0 }}
+>
+  <Sphere id="rsm-sphere" fill="#c5e3f5" stroke="#6eb0d8" strokeWidth={2} />
+  <Graticule stroke="#a0cce8" strokeWidth={0.5} />
+  <Geographies geography={GEO_URL}>
+    {({ geographies }) => geographies.map((geo) => (
+      <Geography key={geo.rsmKey} geography={geo}
+        fill="#ddeef8" stroke="#85b4d0" strokeWidth={0.5}
+        style={{ default: { outline: "none" }, hover: { outline: "none" }, pressed: { outline: "none" } }}
+      />
+    ))}
+  </Geographies>
+</ComposableMap>
+```
+
+**Dual-layer pattern for HTML cards on SVG globe:**
+
+Build a `d3-geo` projection that **exactly matches** what `react-simple-maps` uses internally. Pre-project all pins once per frame. Render SVG dots inside `<ComposableMap>` and HTML cards as a separate absolute-positioned div using the same pixel coordinates:
+
+```tsx
+// Match the same projection react-simple-maps uses
+const projection = geoOrthographic()
+  .scale(GLOBE_SCALE)
+  .translate([MAP_W / 2, CANVAS_H / 2])
+  .rotate([-rotateLon, -8, 0]);
+
+// geoOrthographic returns null for back-hemisphere points
+const projected = PINS.map((pin) => projection(pin.coords));
+
+// SVG layer — dots inside <ComposableMap>
+{PINS.map((pin, i) => {
+  const pos = projected[i];
+  if (!pos) return null; // back hemisphere — naturally disappears
+  const [x, y] = pos;
+  return (
+    <g key={pin.city} transform={`translate(${x},${y})`}>
+      <circle r={3.5} fill="#22c55e" />
+    </g>
+  );
+})}
+
+// HTML layer — absolute-positioned cards outside <ComposableMap>
+<div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+  {PINS.map((pin, i) => {
+    const pos = projected[i];
+    if (!pos) return null;
+    const [x, y] = pos;
+    return (
+      <div key={pin.city} style={{ position: "absolute", left: x + 16, top: y - CARD_H - 16 }}>
+        {/* agent card */}
+      </div>
+    );
+  })}
+</div>
+```
+
+**Pin visibility — limb guard (pop-in only):**
+
+Apply the angular distance check **only during the first 10 frames** a pin is alive. This prevents pins from popping in at the distorted globe edge (in ocean), but lets them persist as the globe rotates — they disappear naturally when `projection()` returns `null` (back hemisphere).
+
+```tsx
+const appearFrame = PIN_APPEAR_START + i * PIN_STAGGER;
+const localFrame  = frame - appearFrame;
+if (localFrame < 0) return null;
+
+if (localFrame < 10) {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const [pLon, pLat] = pin.coords;
+  const a = Math.sin(toRad((pLat - 8) / 2)) ** 2
+    + Math.cos(toRad(8)) * Math.cos(toRad(pLat))
+    * Math.sin(toRad((pLon - rotateLon) / 2)) ** 2;
+  const angDist = 2 * Math.asin(Math.sqrt(a)) * (180 / Math.PI);
+  if (angDist > 72) return null; // prevent ocean pop-in only
+}
+// After 10 frames: stays visible until pos === null (back hemisphere)
+```
+
+**Globe rotation:**
+```tsx
+const GLOBE_SPIN_START =  80;  // Asia-Pacific
+const GLOBE_SPIN_END   = -30;  // Atlantic (shows Americas + Africa simultaneously)
+const GLOBE_SETTLE     = 155;  // frames until it stops
+
+const rotateLon = interpolate(frame, [0, GLOBE_SETTLE], [GLOBE_SPIN_START, GLOBE_SPIN_END], {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
   easing: Easing.out(Easing.cubic),
 });
 ```
 
-### Scale pop (word-by-word)
+**Pin stagger — for 150+ pins:**
 ```tsx
-const scale = interpolate(
-  frame,
-  [start, start + duration * 0.5, end],
-  [0.8, 1.05, 1],
-  { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-);
+const PIN_APPEAR_START = 5;
+const PIN_STAGGER = 1.2; // 150 pins × 1.2 = 180 frames (3s at 60fps)
 ```
 
-### Looping marquee (infinite scroll)
+**Pulsing dot animation:**
 ```tsx
-const loopFrame = frame % LOOP_FRAMES;
-const translate = interpolate(
-  loopFrame,
-  [0, LOOP_FRAMES],
-  [-totalWidth / 2, 0]
-);
-```
+const pulse = (Math.sin((frame / 60) * Math.PI * 2.5) + 1) / 2;
+const ringR = interpolate(pulse, [0, 1], [4, 10]);
+const ringOpacity = interpolate(pulse, [0, 1], [0.5, 0]);
 
-### Carousel / rotating content (by index)
-```tsx
-const activeIndex = Math.min(
-  Math.floor(frame / PHRASE_DURATION),
-  items.length - 1
-);
-const localFrame = frame - activeIndex * PHRASE_DURATION;
+<circle r={ringR} fill="none" stroke="#22c55e" strokeWidth={1} opacity={ringOpacity} />
+<circle r={3.5} fill="#22c55e" />
 ```
 
 ---
 
-## 11. Browser Chrome (Demo Cards)
+## 16. Common Animation Patterns
 
-For product demos inside a fake browser window:
+### Linear fade-in
+```tsx
+const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+```
+
+### Slide in from right
+```tsx
+const x = interpolate(frame, [0, 20], [700, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+```
+
+### Scale pop (spring)
+```tsx
+const s = spring({ fps, frame, config: { stiffness: 480, damping: 28 }, durationInFrames: 20, to: 1 });
+const scale = interpolate(s, [0, 1], [0.5, 1]);
+```
+
+### Looping marquee
+```tsx
+const loopFrame = frame % LOOP_FRAMES;
+const translate = interpolate(loopFrame, [0, LOOP_FRAMES], [-totalWidth / 2, 0]);
+```
+
+### Exponential grid zoom-out (infinite grid effect)
+```tsx
+const INITIAL_SCALE = 18;
+const scale = interpolate(frame, [ZOOM_START, ZOOM_START + ZOOM_DURATION], [INITIAL_SCALE, 1], {
+  extrapolateLeft: "clamp",
+  extrapolateRight: "clamp",
+  easing: Easing.out(Easing.cubic),
+});
+// Apply to a grid container: transform: `scale(${scale})`
+// Grid cards use display:grid with gridTemplateColumns repeat(N, Xpx) and gap
+```
+
+---
+
+## 17. Browser Chrome (Demo Cards)
 
 ```tsx
-const BROWSER_H = 52;
-const DOTS = [
-  { color: "#FF5F57" },
-  { color: "#FEBC2E" },
-  { color: "#28C840" },
-];
-
 const BrowserHeader: React.FC<{ url: string }> = ({ url }) => (
-  <div style={{
-    width: "100%",
-    height: BROWSER_H,
-    background: "#F2F2F2",
-    borderBottom: "1px solid #DCDCDC",
-    display: "flex",
-    alignItems: "center",
-    padding: "0 20px",
-    gap: 10,
-  }}>
-    {/* Traffic light dots + URL bar + url text */}
+  <div style={{ width: "100%", height: 52, background: "#F2F2F2", borderBottom: "1px solid #DCDCDC",
+    display: "flex", alignItems: "center", padding: "0 20px", gap: 10 }}>
+    {/* Traffic light dots + URL bar */}
   </div>
 );
 ```
 
-Card container: rounded corners, shadow, `overflow: hidden` for video.
-
 ---
 
-## 12. Video Demo Card Timing
-
-Standard card animation constants:
-
-```tsx
-const T_IN = 15;         // spring in
-const T_OUT = 8;        // short exit
-const T_OUT_OVERLAP = 5; // start exit 5 frames before video ends (no pause)
-```
-
-Frame calculation for a single video card:
-
-```tsx
-const VIDEO_FRAMES = Math.round(videoDurationSeconds * 60 / playbackRate);
-const CARD_FRAMES = T_IN + VIDEO_FRAMES - T_OUT_OVERLAP + T_OUT;
-```
-
----
-
-## 13. Beat Grid (Music Sync)
+## 18. Beat Grid (Music Sync)
 
 For full-video compositions with background music (103 BPM, 60 fps):
 
 ```tsx
 const BEAT = 35; // 60/103 * 60 ≈ 35 frames per beat
 const snap   = (f: number) => Math.round(f / BEAT) * BEAT;
-const snapUp = (f: number) => Math.ceil(f / BEAT) * BEAT;  // no clipping
+const snapUp = (f: number) => Math.ceil(f / BEAT) * BEAT;
 ```
-
-- Use `snap()` to round scene durations to beats.
-- Use `snapUp()` when you must not clip content (e.g. DeployClickScene, OutroScene).
 
 ---
 
-## 14. Creating a New Composition
+## 19. Creating a New Composition
 
-1. Create `ComponentName.tsx` in `launch-videos/my-video/src/`.
-2. Export the component (and optionally a `*_FRAMES` constant).
+1. Create `ComponentName.tsx` in `src/`.
+2. Export the component.
 3. Register in `Root.tsx`:
 
 ```tsx
@@ -380,54 +533,14 @@ const snapUp = (f: number) => Math.ceil(f / BEAT) * BEAT;  // no clipping
 />
 ```
 
-4. Use `brand`, `staticFile`, `interpolate`, `spring`, `Easing` as needed.
+4. For static hold at end: `durationInFrames = FREEZE_AT_FRAME + holdFrames`.
 
 ---
 
-## 15. Adding a Scene to FullVideo / FullVideoNew
-
-1. Import the component and its frame count constant.
-2. Add duration (beat-snapped):
-
-```tsx
-const DUR_NEW = snap(rawFrames);  // or snapUp for no clipping
-```
-
-3. Add to `Series`:
-
-```tsx
-<Series.Sequence durationInFrames={DUR_NEW} name="My Scene">
-  <MyScene />
-</Series.Sequence>
-```
-
-4. Add `DUR_NEW` to `FULL_VIDEO_FRAMES` or `FULL_VIDEO_NEW_FRAMES`.
-
----
-
-## 16. Existing Compositions (Quick Reference)
-
-| Id | Component | Duration |
-|----|-----------|----------|
-| `blink-claw-intro` | BlinkClawIntro | 90 |
-| `video-demo-card` | VideoDemoCard | ~901 |
-| `video-demo-card-new` | VideoDemoCardNew | ~1836 |
-| `deploy-click-scene` | DeployClickScene | 397 |
-| `tools-and-llms-marquee` | ToolsAndLLMsMarquee | 180 |
-| `no-phrases-with-icons` | NoPhrasesWithIcons | 180 |
-| `create-and-choose` | CreateAndChoose | 480 |
-| `and-dots` | AndDots | 64 |
-| `multi-agent-parallel` | MultiAgentParallel | 240 |
-| `outro-scene` | OutroScene | 175 |
-| `full-video` | FullVideo | sum of scenes |
-| `full-video-new` | FullVideoNew | sum of scenes |
-
----
-
-## 17. Commands
+## 20. Commands
 
 ```bash
-cd launch-videos/my-video
+cd launch-videos/<project>
 npm run dev      # Remotion Studio
 npm run build    # Bundle for render
 npm run lint     # ESLint + TypeScript
@@ -435,13 +548,17 @@ npm run lint     # ESLint + TypeScript
 
 ---
 
-## 18. Do's and Don'ts
+## 21. Do's and Don'ts
 
 - **Do** use `brand` for typography and colors.
 - **Do** use `staticFile()` for assets; never hardcode paths.
-- **Do** export `*_FRAMES` when the composition has a derived duration.
-- **Do** use `extrapolateLeft` / `extrapolateRight: "clamp"` in `interpolate` to avoid overshoot.
-- **Do** keep design tokens (sizes, timings) as constants at top of file.
+- **Do** use `extrapolateLeft/Right: "clamp"` in every `interpolate` call.
+- **Do** keep all timing constants at top of file as named constants.
+- **Do** use `OffthreadVideo` (not `Video`) for background videos — sharper, no flicker.
+- **Do** use `Math.min(frame, FREEZE_AT_FRAME)` with unconditional `<Freeze>` for end-hold.
+- **Do** install packages with `--legacy-peer-deps` if the project uses React 19.
+- **Do** verify video duration with `ffprobe` before using time offsets.
+- **Don't** conditionally render `<Freeze>` — causes a 1-frame transparent flash on mount/unmount.
 - **Don't** use `objectFit` carelessly — `cover` crops, `contain` letterboxes, `fill` stretches.
 - **Don't** forget to register new compositions in `Root.tsx`.
-- **Don't** add post-video pauses in demo cards; use `T_OUT_OVERLAP` for smooth transitions.
+- **Don't** apply angular distance checks on every frame for globe pins — only guard the pop-in (first ~10 frames), then let `projection() === null` handle back-hemisphere hiding naturally.
